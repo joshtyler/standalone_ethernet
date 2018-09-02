@@ -7,83 +7,57 @@
 #include "ClockGen.hpp"
 #include "AXISSink.hpp"
 #include "AXISSource.hpp"
+#include "VerilatedModel.hpp"
+
 
 
 int main(int argc, char** argv)
 {
-	bool recordVcdTrace = true;
-	VerilatedVcdC* tfp = NULL;
+	const bool recordVcd = true;
 
-	Verilated::commandArgs(argc, argv);
+	VerilatedModel<Vcrc> uut(argc,argv,recordVcd);
 
-	Vcrc* top = new Vcrc;
-	vluint64_t time = 0;
-
-	if (recordVcdTrace)
-    {
-        Verilated::traceEverOn(true);
-
-        tfp = new VerilatedVcdC;
-        top->trace(tfp, 99);
-
-        std::string vcdname = argv[0];
-        vcdname += ".vcd";
-        std::cout << vcdname << std::endl;
-        tfp->open(vcdname.c_str());
-    }
-
-	ClockGen clk(time, 1e-9, 100e6);
-	AXISSink<vluint32_t> outAxis(clk, top->sresetn, top->out_axis_tready,
-		top->out_axis_tvalid, top->out_axis_tlast, top->out_axis_tdata);
+	ClockGen clk(uut.getTime(), 1e-9, 100e6);
+	AXISSink<vluint32_t> outAxis(clk, uut.uut->sresetn, uut.uut->out_axis_tready,
+		uut.uut->out_axis_tvalid, uut.uut->out_axis_tlast, uut.uut->out_axis_tdata);
 
 	std::vector<std::vector<vluint8_t>> inData = {{0x0,0x1,0x2,0x3}};
 	//std::vector<std::vector<vluint8_t>> inData = {{0x01}};
-	AXISSource<vluint8_t> inAxis(clk, top->sresetn, top->in_axis_tready,
-		top->in_axis_tvalid, top->in_axis_tlast, top->in_axis_tdata,
+	AXISSource<vluint8_t> inAxis(clk, uut.uut->sresetn, uut.uut->in_axis_tready,
+		uut.uut->in_axis_tvalid, uut.uut->in_axis_tlast, uut.uut->in_axis_tdata,
 		inData);
 
+	uut.addPeripheral(&outAxis);
+	uut.addPeripheral(&inAxis);
+	ClockBind clkDriver(clk,uut.uut->clk);
+	uut.addClock(&clkDriver);
 
-		top->out_axis_tready = 1;
+	uut.uut->out_axis_tready = 1;
 
-	while(!Verilated::gotFinish())
-	{
-		time++;
-		top->clk = clk.getVal();
+		#warning "Reset held at 1"
+		uut.uut->sresetn = 1;
 
-		//Set sresetn
-		if(time < 12)
+		while(true)
 		{
-			top->sresetn = 0;
-		} else {
-			top->sresetn = 1;
+			if(uut.eval() == false)
+			{
+				break;
+			}
+
+			// Break if we have a whole packet
+			if(outAxis.getTlastCount() == 1)
+			{
+				//break;
+			}
+
+			// Or after a timeout
+			if(uut.getTime() == 10000)
+			{
+				std::cout << "Timed out" << std::endl;
+				break;
+			}
 		}
 
-		inAxis.eval_in();
-		outAxis.eval_in();
-		top->eval();
-		inAxis.eval_out();
-		outAxis.eval_out();
-
-
-		//Add this to the dump
-		if (tfp != NULL)
-		{
-		    tfp->dump(time);
-		}
-		//std::cout << "top->out_axis_tvalid: " << (int)top->out_axis_tvalid << std::endl;
-
-		// Break if we have a whole packet
-		// (or after a timeout)
-		if(time == 10000)
-		{
-			std::cout << "Timed out" << std::endl;
-			break;
-		}
-		if(outAxis.getTlastCount() == 1)
-		{
-			//break;
-		}
-	}
 	// Print first packet
 	std::vector<std::vector<vluint32_t>> data = outAxis.getData();
 	std::cout << "First packet:" << std::hex ;
@@ -93,10 +67,6 @@ int main(int argc, char** argv)
 	}
 	std::cout << std::dec << std::endl;
 
-    if (tfp != NULL)
-    {
-        tfp->close();
-        delete tfp;
-    }
+
 
 }

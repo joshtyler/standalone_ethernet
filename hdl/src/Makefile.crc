@@ -1,4 +1,5 @@
 VERILATOR = verilator
+#VERILATOR_FLAGS = --trace --cc --exe -CFLAGS '-Wall -Wextra -g -fno-stack-protector'
 VERILATOR_FLAGS = --trace --cc --exe -CFLAGS '-Wall -Wextra -g'
 
 VERILOG_TOP = crc.v

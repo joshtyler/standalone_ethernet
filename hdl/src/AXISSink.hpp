@@ -12,11 +12,15 @@ template <class dataT> class AXISSink : public Peripheral
 {
 public:
 	AXISSink(ClockGen &clk, const vluint8_t &sresetn,
-		vluint8_t &ready, const vluint8_t & valid, const vluint8_t &last,
-		const dataT &data)
-		:clk(clk), sresetn(sresetn), ready(ready), valid(valid), last(last),
-		 data(data)
+		vluint8_t &ready, const vluint8_t & validIn, const vluint8_t &lastIn,
+		const dataT &dataIn)
+		:clk(clk), sresetn(sresetn), ready(ready), valid(validIn), last(lastIn),
+		 data(dataIn)
 	{
+		addInput(&valid);
+		addInput(&last);
+		addInput(&data);
+
 		//Push empty vector so that the first element has something to add to
 		vec.push_back(std::vector<dataT>());
 
@@ -31,7 +35,7 @@ public:
 	//Return number of times tlast has been received
 	unsigned int getTlastCount(void) const {return vec.size()-1;};
 
-	void eval_in(void) override
+	void eval(void) override
 	{
 		#warning "Doesn't currently handle reset in the middle of sim"
 		if((clk.getEvent() == ClockGen::Event::RISING) and (sresetn == 1))
@@ -49,15 +53,13 @@ public:
 		}
 	}
 
-	void eval_out(void) override {};
-
 private:
 	ClockGen &clk;
 	const vluint8_t &sresetn;
 	vluint8_t &ready;
-	const vluint8_t &valid;
-	const vluint8_t &last;
-	const dataT &data;
+	InputLatch <vluint8_t> valid;
+	InputLatch <vluint8_t> last;
+	InputLatch <dataT> data;
 
 	std::vector<std::vector<dataT>> vec;
 };

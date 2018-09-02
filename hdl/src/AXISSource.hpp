@@ -12,12 +12,12 @@ template <class dataT> class AXISSource : public Peripheral
 {
 public:
 	AXISSource(ClockGen &clk, const vluint8_t &sresetn,
-		const vluint8_t &ready, vluint8_t & valid, vluint8_t &last,
+		const vluint8_t &readyIn, vluint8_t & valid, vluint8_t &last,
 		dataT &data, std::vector<std::vector<dataT>> vec)
-		:clk(clk), sresetn(sresetn), ready(ready), valid(valid), last(last),
+		:clk(clk), sresetn(sresetn), ready(readyIn), valid(valid), last(last),
 		 data(data), vec(vec)
 	{
-		ready_latch = ready;
+		addInput(&ready);
 
 		//Initiailise outputs
 		valid = 1;
@@ -28,12 +28,12 @@ public:
 	// Returns true if we are done
 	bool done(void) const {return (vec.size() == 0);};
 
-	void eval_out(void) override
+	void eval(void) override
 	{
 		#warning "Doesn't currently handle reset in the middle of sim"
 		if((clk.getEvent() == ClockGen::Event::RISING) and (sresetn == 1))
 		{
-			if(ready_latch && valid)
+			if(ready && valid)
 			{
 				last = 0; // Reset last flag
 				assert(vec[0].size() != 0);
@@ -62,19 +62,13 @@ public:
 		}
 	}
 
-	void eval_in(void) override
-	{
-		ready_latch = ready;
-	};
-
 private:
 	ClockGen &clk;
 	const vluint8_t &sresetn;
-	const vluint8_t &ready;
+	InputLatch<vluint8_t> ready;
 	vluint8_t &valid;
 	vluint8_t &last;
 	dataT &data;
-	vluint8_t ready_latch;
 
 	std::vector<std::vector<dataT>> vec;
 };

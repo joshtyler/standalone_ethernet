@@ -5,17 +5,20 @@
 // N.B. Currently this does not support any kind of reset
 
 #include "ClockGen.hpp"
+#include "Peripheral.hpp"
 #include <vector>
 
-template <class dataT> class AXISSource
+template <class dataT> class AXISSource : public Peripheral
 {
 public:
-	AXISSource(ClockGen &clkIn,
-		const vluint8_t &readyIn, vluint8_t & validIn, vluint8_t &lastIn,
-		dataT &dataIn, std::vector<std::vector<dataT>> vecIn)
-		:clk(clkIn), ready(readyIn), valid(validIn), last(lastIn),
-		 data(dataIn), vec(vecIn)
+	AXISSource(ClockGen &clk, const vluint8_t &sresetn,
+		const vluint8_t &ready, vluint8_t & valid, vluint8_t &last,
+		dataT &data, std::vector<std::vector<dataT>> vec)
+		:clk(clk), sresetn(sresetn), ready(ready), valid(valid), last(last),
+		 data(data), vec(vec)
 	{
+		ready_latch = ready;
+
 		//Initiailise outputs
 		valid = 1;
 		assert(vec[0].size() > 0);
@@ -25,11 +28,12 @@ public:
 	// Returns true if we are done
 	bool done(void) const {return (vec.size() == 0);};
 
-	void eval(void)
+	void eval_out(void) override
 	{
-		if(clk.getEvent() == ClockGen::Event::RISING)
+		#warning "Doesn't currently handle reset in the middle of sim"
+		if((clk.getEvent() == ClockGen::Event::RISING) and (sresetn == 1))
 		{
-			if(ready && valid)
+			if(ready_latch && valid)
 			{
 				last = 0; // Reset last flag
 				assert(vec[0].size() != 0);
@@ -58,12 +62,19 @@ public:
 		}
 	}
 
+	void eval_in(void) override
+	{
+		ready_latch = ready;
+	};
+
 private:
 	ClockGen &clk;
+	const vluint8_t &sresetn;
 	const vluint8_t &ready;
 	vluint8_t &valid;
 	vluint8_t &last;
 	dataT &data;
+	vluint8_t ready_latch;
 
 	std::vector<std::vector<dataT>> vec;
 };

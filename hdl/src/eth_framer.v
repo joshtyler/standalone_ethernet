@@ -63,6 +63,11 @@ logic       ethertype_axis_tvalid;
 logic       ethertype_axis_tlast;
 logic [7:0] ethertype_axis_tdata;
 
+logic       crc_axis_tready;
+logic       crc_axis_tvalid;
+logic       crc_axis_tlast;
+logic [7:0] crc_axis_tdata;
+
 // Preamble Stream
 vector_to_axis
 	#(

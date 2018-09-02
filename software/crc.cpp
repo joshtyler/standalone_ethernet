@@ -91,6 +91,9 @@ int main(void)
 
 	data =  {1};
 
+	data = {0,1,2,3};
+
+
 	std::vector<unsigned int> taps = {1,2,4,5,7,8,10,11,12,16,22,23,26};
 	std::bitset<32> crc;
 	//crc.reset(); //Start with all zeros
@@ -142,7 +145,7 @@ int main(void)
 	std::cout << "rCRC:" << std::hex << reverseBits(crc.to_ulong()) << std::endl;
 
 
-	uint8_t foo = 1;
+	uint8_t foo = 0;
 	std::cout << "  Ex:" << std::hex << crc32c(0,&foo,1) << std::endl;
 
 	return 0;

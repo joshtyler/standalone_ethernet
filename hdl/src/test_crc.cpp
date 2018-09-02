@@ -1,6 +1,6 @@
 #include <iostream>
 #include <iomanip> //setw
-#include "Veth_framer.h"
+#include "Vcrc.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 
@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 
 	Verilated::commandArgs(argc, argv);
 
-	Veth_framer* top = new Veth_framer;
+	Vcrc* top = new Vcrc;
 	vluint64_t time = 0;
 
 	if (recordVcdTrace)
@@ -33,41 +33,37 @@ int main(int argc, char** argv)
     }
 
 	ClockGen clk(time, 1e-9, 100e6);
-	AXISSink<vluint8_t> outAxis(clk, top->out_axis_tready,
+	AXISSink<vluint32_t> outAxis(clk, top->sresetn, top->out_axis_tready,
 		top->out_axis_tvalid, top->out_axis_tlast, top->out_axis_tdata);
 
-	std::vector<std::vector<vluint8_t>> payload = {{0x0,0x1,0x2,0x3}};
-	AXISSource<vluint8_t> payloadAxis(clk, top->payload_axis_tready,
-		top->payload_axis_tvalid, top->payload_axis_tlast, top->payload_axis_tdata,
-		payload);
+	std::vector<std::vector<vluint8_t>> inData = {{0x0,0x1,0x2,0x3}};
+	//std::vector<std::vector<vluint8_t>> inData = {{0x01}};
+	AXISSource<vluint8_t> inAxis(clk, top->sresetn, top->in_axis_tready,
+		top->in_axis_tvalid, top->in_axis_tlast, top->in_axis_tdata,
+		inData);
 
-    top->ethertype = 0x0800; // IP
-    top->src_mac = 0x010203040506;
-    top->dst_mac = 0xf0e0d0c0b0a0;
-    top->payload_axis_tvalid = 1;
 
-    top->out_axis_tready = 1;
+		top->out_axis_tready = 1;
 
 	while(!Verilated::gotFinish())
 	{
-		//std::cout << "Time: " << time << std::endl;
-		//std::cout << "Clock: " << clk.getVal() <<", " << clk.eventToStr(clk.getEvent()) << std::endl << std::endl;
-
-		//Toggle clock
-		top-> clk = clk.getVal();
-		outAxis.eval();
-		payloadAxis.eval();
-
-		top->eval();
+		time++;
+		top->clk = clk.getVal();
 
 		//Set sresetn
-		if(time > 0 && time < 10)
+		if(time < 12)
 		{
-			//std::cout << "Setting 0" << std::endl;
 			top->sresetn = 0;
 		} else {
 			top->sresetn = 1;
 		}
+
+		inAxis.eval_in();
+		outAxis.eval_in();
+		top->eval();
+		inAxis.eval_out();
+		outAxis.eval_out();
+
 
 		//Add this to the dump
 		if (tfp != NULL)
@@ -85,13 +81,11 @@ int main(int argc, char** argv)
 		}
 		if(outAxis.getTlastCount() == 1)
 		{
-			break;
+			//break;
 		}
-
-		time++;
 	}
 	// Print first packet
-	std::vector<std::vector<vluint8_t>> data = outAxis.getData();
+	std::vector<std::vector<vluint32_t>> data = outAxis.getData();
 	std::cout << "First packet:" << std::hex ;
 	for(auto const & itm : data[0])
 	{

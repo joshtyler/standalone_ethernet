@@ -8,7 +8,7 @@
 #include "AXISSink.hpp"
 #include "AXISSource.hpp"
 #include "VerilatedModel.hpp"
-
+#include "ResetGen.hpp"
 
 
 int main(int argc, char** argv)
@@ -27,15 +27,13 @@ int main(int argc, char** argv)
 		uut.uut->in_axis_tvalid, uut.uut->in_axis_tlast, uut.uut->in_axis_tdata,
 		inData);
 
+	ResetGen resetGen(clk,uut.uut->sresetn, false);
+
 	uut.addPeripheral(&outAxis);
 	uut.addPeripheral(&inAxis);
+	uut.addPeripheral(&resetGen);
 	ClockBind clkDriver(clk,uut.uut->clk);
 	uut.addClock(&clkDriver);
-
-	uut.uut->out_axis_tready = 1;
-
-		#warning "Reset held at 1"
-		uut.uut->sresetn = 1;
 
 		while(true)
 		{

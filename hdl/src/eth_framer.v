@@ -63,10 +63,30 @@ logic       ethertype_axis_tvalid;
 logic       ethertype_axis_tlast;
 logic [7:0] ethertype_axis_tdata;
 
-logic       crc_axis_tready;
-logic       crc_axis_tvalid;
-logic       crc_axis_tlast;
-logic [7:0] crc_axis_tdata;
+logic       joined_axis_tready;
+logic       joined_axis_tvalid;
+logic       joined_axis_tlast;
+logic [7:0] joined_axis_tdata;
+
+logic       crc_in_axis_tready;
+logic       crc_in_axis_tvalid;
+logic       crc_in_axis_tlast;
+logic [7:0] crc_in_axis_tdata;
+
+logic       out_joiner_in_axis_tready;
+logic       out_joiner_in_axis_tvalid;
+logic       out_joiner_in_axis_tlast;
+logic [7:0] out_joiner_in_axis_tdata;
+
+logic        crc_out_axis_tready;
+logic        crc_out_axis_tvalid;
+logic        crc_out_axis_tlast;
+logic [31:0] crc_out_axis_tdata;
+
+logic       crc_unpacked_axis_tready;
+logic       crc_unpacked_axis_tvalid;
+logic       crc_unpacked_axis_tlast;
+logic [7:0] crc_unpacked_axis_tdata;
 
 // Preamble Stream
 vector_to_axis
@@ -191,6 +211,90 @@ axis_joiner
                     dst_mac_axis_tdata,
                         sof_axis_tdata,
                    preamble_axis_tdata}),
+
+.axis_o_tready(joined_axis_tready),
+.axis_o_tvalid(joined_axis_tvalid),
+.axis_o_tlast (joined_axis_tlast),
+.axis_o_tdata (joined_axis_tdata)
+);
+
+// Distribute framed data top joiner and CRC
+axis_distributor
+#(
+	.AXIS_BYTES(1),
+	.NUM_STREAMS(2)
+) distr (
+	.clk(clk),
+	.sresetn(sresetn),
+
+	.axis_i_tready(joined_axis_tready),
+	.axis_i_tvalid(joined_axis_tvalid),
+	.axis_i_tlast (joined_axis_tlast),
+	.axis_i_tdata (joined_axis_tdata),
+
+	.axis_o_tready({ crc_in_axis_tready,
+	                 out_joiner_in_axis_tready}),
+	.axis_o_tvalid({ crc_in_axis_tvalid,
+	                 out_joiner_in_axis_tvalid}),
+	.axis_o_tlast ({ crc_in_axis_tlast,
+                   out_joiner_in_axis_tlast}),
+	.axis_o_tdata ({ crc_in_axis_tdata,
+                   out_joiner_in_axis_tdata})
+);
+
+// CRC calculation
+crc crc_gen (
+	.clk(clk),
+	.sresetn(sresetn),
+
+	.axis_i_tready(crc_in_axis_tready),
+	.axis_i_tvalid(crc_in_axis_tvalid),
+	.axis_i_tlast (crc_in_axis_tlast),
+	.axis_i_tdata (crc_in_axis_tdata),
+
+	.axis_o_tready(crc_out_axis_tready),
+	.axis_o_tvalid(crc_out_axis_tvalid),
+	.axis_o_tlast (crc_out_axis_tlast),
+	.axis_o_tdata (crc_out_axis_tdata)
+);
+
+// Unpack crc
+axis_unpacker
+#(
+	.AXIS_I_BYTES(4),
+	.AXIS_O_BYTES(1)
+) crc_unpacker (
+	.clk(clk),
+	.sresetn(sresetn),
+
+	.axis_i_tready(crc_out_axis_tready),
+	.axis_i_tvalid(crc_out_axis_tvalid),
+	.axis_i_tlast (crc_out_axis_tlast),
+	.axis_i_tdata (crc_out_axis_tdata),
+
+	.axis_o_tready(crc_unpacked_axis_tready),
+	.axis_o_tvalid(crc_unpacked_axis_tvalid),
+	.axis_o_tlast (crc_unpacked_axis_tlast),
+	.axis_o_tdata (crc_unpacked_axis_tdata)
+);
+
+// Final output
+axis_joiner
+#(
+	.AXIS_BYTES(1),
+	.NUM_STREAMS(2)
+) out_joiner (
+	.clk(clk),
+	.sresetn(sresetn),
+
+	.axis_i_tready({ crc_unpacked_axis_tready,
+	                 out_joiner_in_axis_tready}),
+	.axis_i_tvalid({ crc_unpacked_axis_tvalid,
+	                 out_joiner_in_axis_tvalid}),
+	.axis_i_tlast ({ crc_unpacked_axis_tlast,
+                   out_joiner_in_axis_tlast}),
+	.axis_i_tdata ({ crc_unpacked_axis_tdata,
+                   out_joiner_in_axis_tdata}),
 
 .axis_o_tready(out_axis_tready),
 .axis_o_tvalid(out_axis_tvalid),

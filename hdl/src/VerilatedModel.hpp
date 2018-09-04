@@ -92,7 +92,7 @@ public:
 		return (!Verilated::gotFinish());
 	}
 
-	Vcrc* uut;
+	MODEL* uut;
 private:
 	std::vector<ClockBind *> clocks;
 	std::vector<Peripheral *> peripherals;

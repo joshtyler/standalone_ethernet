@@ -20,16 +20,16 @@ module crc(
 	input sresetn,
 
 	// Input
-	output      in_axis_tready,
-	input       in_axis_tvalid,
-	input       in_axis_tlast,
-	input [7:0] in_axis_tdata,
+	output      axis_i_tready,
+	input       axis_i_tvalid,
+	input       axis_i_tlast,
+	input [7:0] axis_i_tdata,
 
 	// Output
-	input         out_axis_tready,
-	output        out_axis_tvalid,
-	output        out_axis_tlast,
-	output [31:0] out_axis_tdata
+	input         axis_o_tready,
+	output        axis_o_tvalid,
+	output        axis_o_tlast,
+	output [31:0] axis_o_tdata
 );
 
 	reg [31:0] lfsr_q, lfsr_c, lfsr_c_rev;
@@ -37,31 +37,33 @@ module crc(
 
 	integer i;
 
-//	assign data_in = in_axis_tdata;
+//	assign data_in = axis_i_tdata;
 	always @(*)
 		for(i=0; i<8; i++)
-			data_in[i] = in_axis_tdata[7-i];
-//	assign out_axis_tdata = lfsr_q;
+			data_in[i] = axis_i_tdata[7-i];
+//	assign axis_o_tdata = lfsr_q;
 //	always @(*)
 //		for(i=0; i<31; i++)
-//			out_axis_tdata[i] = !lfsr_q[31-i];
+//			axis_o_tdata[i] = !lfsr_q[31-i];
 
 	always @(*)
 		for(i=0; i<32; i++)
 			lfsr_c_rev[i] = lfsr_c[31-i];
 
-assign out_axis_tdata = ~lfsr_c_rev;
+assign axis_o_tdata = ~lfsr_c_rev;
 
-	assign out_axis_tlast = 1;
-	assign out_axis_tvalid = in_axis_tlast;
-	assign in_axis_tready = out_axis_tready;
+	assign axis_o_tlast = 1;
+	assign axis_o_tvalid = axis_i_tlast;
+
+	// We can accept data without the output being ready provided that it's not the last packet
+	assign axis_i_tready = axis_o_tvalid? axis_o_tready : 1;
 
 	always @(posedge clk) begin
-		if((! sresetn) || (in_axis_tready && in_axis_tvalid && in_axis_tlast)) begin
+		if((! sresetn) || (axis_i_tready && axis_i_tvalid && axis_i_tlast)) begin
 			lfsr_q <= {32{1'b1}};
 		end
 		else begin
-			lfsr_q <= in_axis_tvalid ? lfsr_c : lfsr_q;
+			lfsr_q <= axis_i_tvalid ? lfsr_c : lfsr_q;
 		end
 	end
 

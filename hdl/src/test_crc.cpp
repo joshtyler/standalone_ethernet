@@ -35,26 +35,26 @@ int main(int argc, char** argv)
 	ClockBind clkDriver(clk,uut.uut->clk);
 	uut.addClock(&clkDriver);
 
-		while(true)
+	while(true)
+	{
+		if(uut.eval() == false)
 		{
-			if(uut.eval() == false)
-			{
-				break;
-			}
-
-			// Break if we have a whole packet
-			if(outAxis.getTlastCount() == 1)
-			{
-				//break;
-			}
-
-			// Or after a timeout
-			if(uut.getTime() == 10000)
-			{
-				std::cout << "Timed out" << std::endl;
-				break;
-			}
+			break;
 		}
+
+		// Break if we have a whole packet
+		if(outAxis.getTlastCount() == 1)
+		{
+			//break;
+		}
+
+		// Or after a timeout
+		if(uut.getTime() == 10000)
+		{
+			std::cout << "Timed out" << std::endl;
+			break;
+		}
+	}
 
 	// Print first packet
 	std::vector<std::vector<vluint32_t>> data = outAxis.getData();

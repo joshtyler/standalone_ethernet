@@ -19,6 +19,10 @@ module axis_fifo
 	output [(AXIS_BYTES*8)-1:0] axis_o_tdata
 );
 
+logic full,empty;
+
+assign axis_i_tready = !full;
+assign axis_o_tvalid = !empty;
 fifo
 	#(
 		.WIDTH((AXIS_BYTES*8)+1),
@@ -27,12 +31,12 @@ fifo
 		.clk(clk),
 		.n_reset(sresetn),
 
-		.full( !axis_i_tready),
+		.full(full),
 		.wr_en(axis_i_tvalid),
 		.data_in ({axis_i_tdata, axis_i_tlast}),
 
 		.rd_en(axis_o_tready),
-		.empty(!axis_o_tvalid),
+		.empty(empty),
 		.data_out ({axis_o_tdata, axis_o_tlast})
 	);
 

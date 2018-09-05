@@ -39,6 +39,11 @@ logic       packet_axis_tvalid;
 logic       packet_axis_tlast;
 logic [7:0] packet_axis_tdata;
 
+logic       spaced_axis_tready;
+logic       spaced_axis_tvalid;
+logic       spaced_axis_tlast;
+logic [7:0] spaced_axis_tdata;
+
 reset_gen
 	#(
 		.POLARITY(0), // Active low
@@ -104,10 +109,27 @@ axis_fifo
 		.axis_o_tdata (packet_axis_tdata)
 	);
 
+	axis_spacer
+		#(
+			.AXIS_BYTES(1),
+			.GAP_CYCLES(100)
+		) spacer_inst (
+			.clk(clk),
+			.sresetn(sresetn),
 
-	assign packet_axis_tready = 1;
+			.axis_i_tready(packet_axis_tready),
+			.axis_i_tvalid(packet_axis_tvalid),
+			.axis_i_tlast (packet_axis_tlast),
+			.axis_i_tdata (packet_axis_tdata),
+
+			.axis_o_tready(spaced_axis_tready),
+			.axis_o_tvalid(spaced_axis_tvalid),
+			.axis_o_tlast (spaced_axis_tlast),
+			.axis_o_tdata (spaced_axis_tdata)
+		);
+
 	rmii_to_axis rmii_inst (
-			.refclk(clk),
+			.clk(clk),
 			.sresetn(sresetn),
 
 			.txd(txd),
@@ -116,9 +138,10 @@ axis_fifo
 			.crs_dv(crs_dv),
 			.rx_er(rx_er),
 
-			.tx_axis_tvalid(packet_axis_tvalid),
-			.tx_axis_tlast (packet_axis_tlast),
-			.tx_axis_tdata (packet_axis_tdata),
+			.tx_axis_ready (spaced_axis_tready),
+			.tx_axis_tvalid(spaced_axis_tvalid),
+			.tx_axis_tlast (spaced_axis_tlast),
+			.tx_axis_tdata (spaced_axis_tdata),
 
 			.rx_axis_tvalid(),
 			.rx_axis_tlast (),

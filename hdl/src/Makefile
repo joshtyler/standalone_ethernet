@@ -12,7 +12,7 @@ default : run
 run:
 	$(VERILATOR) $(VERILATOR_FLAGS) $(VERILOG_SOURCES) --top-module $(VERILOG_TOP) $(CPP_SOURCES)
 
-	$(MAKE) -j 4 -C obj_dir -f Veth_framer.mk
+	$(MAKE) -j 4 -C obj_dir -f Veth_test.mk
 
 clean:
 	rm -r obj_dir

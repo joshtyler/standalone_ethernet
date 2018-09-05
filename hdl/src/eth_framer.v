@@ -182,7 +182,7 @@ vector_to_axis
 axis_joiner
 #(
 	.AXIS_BYTES(1),
-	.NUM_STREAMS(6)
+	.NUM_STREAMS(4)
 ) joiner (
 	.clk(clk),
 	.sresetn(sresetn),
@@ -190,27 +190,19 @@ axis_joiner
 	.axis_i_tready({  payload_axis_tready,
 	                ethertype_axis_tready,
 	                  src_mac_axis_tready,
-	                  dst_mac_axis_tready,
-	                      sof_axis_tready,
-	                 preamble_axis_tready}),
+	                  dst_mac_axis_tready}),
 	.axis_i_tvalid({  payload_axis_tvalid,
 	                ethertype_axis_tvalid,
 	                  src_mac_axis_tvalid,
-	                  dst_mac_axis_tvalid,
-	                      sof_axis_tvalid,
-	                 preamble_axis_tvalid}),
+	                  dst_mac_axis_tvalid}),
 	.axis_i_tlast ({  payload_axis_tlast,
                   ethertype_axis_tlast,
                     src_mac_axis_tlast,
-                    dst_mac_axis_tlast,
-                        sof_axis_tlast,
-                   preamble_axis_tlast}),
+                    dst_mac_axis_tlast}),
 	.axis_i_tdata ({  payload_axis_tdata,
                   ethertype_axis_tdata,
                     src_mac_axis_tdata,
-                    dst_mac_axis_tdata,
-                        sof_axis_tdata,
-                   preamble_axis_tdata}),
+                    dst_mac_axis_tdata}),
 
 .axis_o_tready(joined_axis_tready),
 .axis_o_tvalid(joined_axis_tvalid),
@@ -282,19 +274,27 @@ axis_unpacker
 axis_joiner
 #(
 	.AXIS_BYTES(1),
-	.NUM_STREAMS(2)
+	.NUM_STREAMS(4)
 ) out_joiner (
 	.clk(clk),
 	.sresetn(sresetn),
 
 	.axis_i_tready({ crc_unpacked_axis_tready,
-	                 out_joiner_in_axis_tready}),
+	                 out_joiner_in_axis_tready,
+                   sof_axis_tready,
+                   preamble_axis_tready}),
 	.axis_i_tvalid({ crc_unpacked_axis_tvalid,
-	                 out_joiner_in_axis_tvalid}),
+	                 out_joiner_in_axis_tvalid,
+                   sof_axis_tvalid,
+                   preamble_axis_tvalid}),
 	.axis_i_tlast ({ crc_unpacked_axis_tlast,
-                   out_joiner_in_axis_tlast}),
+                   out_joiner_in_axis_tlast,
+                   sof_axis_tlast,
+                   preamble_axis_tlast}),
 	.axis_i_tdata ({ crc_unpacked_axis_tdata,
-                   out_joiner_in_axis_tdata}),
+                   out_joiner_in_axis_tdata,
+                   sof_axis_tdata,
+                   preamble_axis_tdata}),
 
 .axis_o_tready(out_axis_tready),
 .axis_o_tvalid(out_axis_tvalid),

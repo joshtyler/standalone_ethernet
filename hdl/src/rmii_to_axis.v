@@ -10,7 +10,7 @@ module rmii_to_axis
 	// RMII interface
 	output [1:0] txd,
 	output tx_en,
-	input [1:0] rxd
+	input [1:0] rxd,
 	input crs_dv,
 	input rx_er,
 
@@ -32,7 +32,7 @@ assign rx_axis_tdata = 0;
 
 reg [1 : 0] ctr;
 
-always @(posedge clk)
+always @(posedge refclk)
 begin
 	if (sresetn == 0)
 	begin

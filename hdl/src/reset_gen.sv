@@ -6,8 +6,8 @@
 
 module reset_gen(clk, en, sreset);
 
-parameter POLARITY;
-parameter COUNT;
+parameter POLARITY = 1;
+parameter COUNT = 100;
 
 localparam integer CTR_WIDTH = $clog2(COUNT);
 
@@ -15,7 +15,7 @@ input clk, en;
 output sreset;
 
 //Lattice guarantees that all registers will contain 0 on power up
-reg [1:0] ctr = 0;
+reg [CTR_WIDTH-1:0] ctr = 0;
 
 always @(posedge clk)
 	if(en)
@@ -25,8 +25,8 @@ always @(posedge clk)
 	end
 
 if (POLARITY)
-	assign sreset = (ctr == COUNT-1); //Active high
+	assign sreset = !(ctr == COUNT-1); //Active high
 else
-	assign sreset = !(ctr == COUNT-1); //Active low
+	assign sreset = (ctr == COUNT-1); //Active low
 endmodule
 /* verilator lint_on width */

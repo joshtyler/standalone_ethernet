@@ -53,24 +53,24 @@ reset_gen
 		.en(1),
 		.sreset(sresetn)
 	);
-
+/* verilator lint_off WIDTH */
 vector_to_axis
 	#(
-		.VEC_BYTES(8),
+		.VEC_BYTES(128),
 		.AXIS_BYTES(1),
 		.MSB_FIRST(1)
 	) sof_axis_gen (
 		.clk(clk),
 		.sresetn(sresetn),
 
-		.vec(64'hDEADBEEFCAFECAFE),
+		.vec(128'hDEADBEEFCAFECAFEDEADBEEFCAFECAFE),
 
 		.axis_tready(payload_axis_tready),
 		.axis_tvalid(payload_axis_tvalid),
 		.axis_tlast (payload_axis_tlast),
 		.axis_tdata (payload_axis_tdata)
 	);
-
+/* verilator lint_on WIDTH */
 eth_framer framer (
 		.clk(clk),
 		.sresetn(sresetn),
@@ -112,7 +112,7 @@ axis_fifo
 	axis_spacer
 		#(
 			.AXIS_BYTES(1),
-			.GAP_CYCLES(100)
+			.GAP_CYCLES(5000000)
 		) spacer_inst (
 			.clk(clk),
 			.sresetn(sresetn),

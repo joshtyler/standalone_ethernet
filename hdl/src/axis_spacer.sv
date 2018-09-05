@@ -22,13 +22,13 @@ module axis_spacer
 );
 localparam integer CTR_WIDTH = GAP_CYCLES == 1? 1 : $clog2(GAP_CYCLES);
 /* verilator lint_off WIDTH */
-localparam logic [CTR_WIDTH-1:0] CTR_MAX = GAP_CYCLES-1;
+localparam CTR_MAX = GAP_CYCLES-1;
 /* verilator lint_on WIDTH */
 logic [CTR_WIDTH-1:0] ctr;
 
 logic [0:0] state;
-localparam logic [0:0] PASS = 1'b0;
-localparam logic [0:0] HALT = 1'b1;
+localparam PASS = 1'b0;
+localparam HALT = 1'b1;
 
 assign axis_o_tdata = axis_i_tdata;
 assign axis_o_tlast = axis_i_tlast;

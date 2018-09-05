@@ -3,7 +3,7 @@ VERILATOR = verilator
 VERILATOR_FLAGS = --trace --cc --exe --l2-name v -CFLAGS '-Wall -Wextra -g'
 
 VERILOG_TOP = eth_test
-VERILOG_SOURCES = eth_test.v
+VERILOG_SOURCES = eth_test.sv
 #VERILOG_SOURCES = eth_framer.v axis_distributor.v axis_joiner.v axis_unpacker.v crc.v vector_to_axis.v
 CPP_SOURCES = test_eth_test.cpp
 

@@ -1,0 +1,11 @@
+# HX8k Dev board constraints
+
+set_io clk C16
+set_io txd[0] D16
+set_io txd[1] D14
+set_io tx_en E16
+
+set_io rxd[0] P16
+set_io rxd[1] P15
+set_io crs_dv N16
+set_io rx_er M15

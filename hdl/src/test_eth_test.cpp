@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 		}
 
 		// Break on timeout
-		if(uut.getTime() == 10000)
+		if(uut.getTime() == 100000)
 		{
 			std::cout << "Timed out" << std::endl;
 			break;

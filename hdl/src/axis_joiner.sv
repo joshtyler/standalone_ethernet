@@ -24,8 +24,8 @@ module axis_joiner
 
 localparam integer CTR_WIDTH = NUM_STREAMS == 1? 1 : $clog2(NUM_STREAMS);
 /* verilator lint_off WIDTH */
-localparam logic [CTR_WIDTH-1:0] CTR_MAX = NUM_STREAMS-1;
-/* verilator lint_on WIDTH */
+localparam CTR_MAX = NUM_STREAMS-1;
+
 
 reg [CTR_WIDTH-1:0] ctr;
 
@@ -55,9 +55,8 @@ endgenerate
 
 assign axis_o_tvalid = axis_i_tvalid[ctr];
 assign axis_o_tlast = (ctr == CTR_MAX)? axis_i_tlast[ctr] : 0; //Only output tlast on last packet
-/* verilator lint_off WIDTH */
+
 assign axis_o_tdata = axis_i_tdata[(1+ctr)*(AXIS_BYTES*8)-1 -: AXIS_BYTES*8];
 /* verilator lint_on WIDTH */
 
 endmodule
-

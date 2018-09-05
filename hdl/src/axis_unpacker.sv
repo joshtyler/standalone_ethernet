@@ -27,8 +27,8 @@ module axis_unpacker
 
 	localparam integer CTR_WIDTH = CTR_MAX == 1? 1 : $clog2(CTR_MAX);
 /* verilator lint_off WIDTH */
-	localparam logic [1:0] CTR_HIGH = CTR_MAX-1;
-/* verilator lint_on WIDTH */
+	localparam CTR_HIGH = CTR_MAX-1;
+
 
 	reg [1:0] state;
 	localparam CAPTURE = 2'b00;
@@ -42,9 +42,9 @@ module axis_unpacker
 	assign axis_i_tready = (state == CAPTURE);
 	assign axis_o_tvalid = (state == OUTPUT);
 	assign axis_o_tlast = (ctr == CTR_HIGH) && axis_i_tlast_latch;
-	/* verilator lint_off WIDTH */
+
 	assign axis_o_tdata = axis_i_tdata_latch[(ctr+1)*(AXIS_O_BYTES*8)-1 -: (AXIS_O_BYTES*8)];
-	/* verilator lint_on WIDTH */
+
 
 	always @(posedge clk)
 	begin
@@ -76,3 +76,4 @@ module axis_unpacker
 
 
 endmodule
+	/* verilator lint_on WIDTH */

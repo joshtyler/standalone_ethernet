@@ -1,0 +1,3 @@
+[submodule "hdl/src/hdl_common"]
+	path = hdl/src/hdl_common
+	url = https://github.com/joshtyler/hdl_common.git

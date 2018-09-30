@@ -22,7 +22,16 @@ module axis_fifo
 logic full,empty;
 
 assign axis_i_tready = !full;
-assign axis_o_tvalid = !empty;
+// valid lags one cycle behind empty
+// This is because empty is a "ready to accept reads" signal
+// So the data is valid one clock cycle after it goes low
+// And when it goes high again, the data is in fact valid!
+always @(posedge clk)
+	if(sresetn == 0)
+		axis_o_tvalid = 0;
+	else
+		axis_o_tvalid = !empty;
+
 fifo
 	#(
 		.WIDTH((AXIS_BYTES*8)+1),

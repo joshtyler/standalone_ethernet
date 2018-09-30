@@ -9,6 +9,11 @@
 #include "Peripheral.hpp"
 #include <vector>
 
+struct DummyRMIIException : std::runtime_error
+{
+	using std::runtime_error::runtime_error;
+};
+
 class DummyRMII : public Peripheral
 {
 public:
@@ -52,10 +57,9 @@ public:
 					count++;
 				}
 			} else {
-				//assert(count == 0);
 				if(last_tx_en)
 				{
-					vec.push_back(packet);
+					vec.push_back(verifyPacket(packet));
 				}
 			}
 			last_tx_en = tx_en;
@@ -71,6 +75,35 @@ private:
 	vluint8_t &rx_er;
 
 	std::vector<std::vector<uint8_t>> vec;
+
+	// Verify the packet contains correct preamble and SoF delimiter
+	// Return packet with these stripped
+	std::vector<uint8_t> verifyPacket(std::vector<uint8_t> packet)
+	{
+		int i;
+		for(i=0;;i++)
+		{
+			if(packet.size() > 0)
+			{
+				uint8_t data = packet[0];
+				packet.erase(packet.begin());
+				if(data == 0xD5) // SoF delimiter
+				{
+					break;
+				} else if(data != 0x55) { //Preamble
+					//Invalid packet
+					throw DummyRMIIException("Unexpected word in preamble: "+std::to_string(data));
+				}
+			} else {
+				throw DummyRMIIException("Packet finished before SoF reached");
+			}
+		}
+		if(i != 7)
+		{
+			throw DummyRMIIException("Incorrect number of SoF bits: "+std::to_string(i));
+		}
+		return packet;
+	}
 };
 
 #endif

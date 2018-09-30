@@ -8,8 +8,12 @@
 #include "DummyRMII.hpp"
 #include "VerilatedModel.hpp"
 
+#include "RawSocket.hpp"
+
 int main(int argc, char** argv)
 {
+	RawSocket sock("enp0s31f6");
+
 	const bool recordVcd = true;
 
 	VerilatedModel<Veth_test> uut(argc,argv,recordVcd);
@@ -47,5 +51,7 @@ int main(int argc, char** argv)
 			std::cout << std::setfill('0') << std::setw(2) << (int)itm << " ";
 		}
 		std::cout << std::dec << std::endl;
+		// Send over socket
+		sock.send(data[0]);
 	}
 }

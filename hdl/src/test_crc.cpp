@@ -10,7 +10,6 @@
 #include "VerilatedModel.hpp"
 #include "ResetGen.hpp"
 
-
 int main(int argc, char** argv)
 {
 	const bool recordVcd = true;

@@ -15,7 +15,7 @@
 
 // Modified for AXI stream input and output
 
-module crc(
+module eth_crc(
 	input clk,
 	input sresetn,
 

@@ -4,11 +4,11 @@
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 
-#include "ClockGen.hpp"
-#include "DummyRMII.hpp"
-#include "VerilatedModel.hpp"
+#include "hdl_common/sim/other/ClockGen.hpp"
+#include "hdl_common/sim/network/DummyRMII.hpp"
+#include "hdl_common/sim/verilator/VerilatedModel.hpp"
 
-#include "RawSocket.hpp"
+#include "hdl_common/sim/network/RawSocket.hpp"
 
 int main(int argc, char** argv)
 {

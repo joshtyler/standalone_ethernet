@@ -1,6 +1,6 @@
 VERILATOR = verilator
 #VERILATOR_FLAGS = --trace --cc --exe -CFLAGS '-Wall -Werror -Wextra -g'
-VERILATOR_FLAGS = --trace --cc --exe --l2-name v -CFLAGS '-Wall -Wextra -g'
+VERILATOR_FLAGS = --trace --cc --exe --l2-name v -CFLAGS '-Wall -Wextra -g' -Ihdl_common/synth/other -Ihdl_common/synth/axis -Ihdl_common/synth/network
 
 VERILOG_TOP = eth_test
 VERILOG_SOURCES = eth_test.sv

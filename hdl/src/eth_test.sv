@@ -20,7 +20,7 @@ module eth_test
 
 	localparam SRC_MAC = 48'h000102030405;
 	localparam DST_MAC = 48'hFFFFFFFFFFFF; //Broadcast
-	localparam ETHERTYPE = 16'h88B5; //Local experimental
+	localparam ETHERTYPE = 16'h0800; //Local experimental
 
 logic sresetn;
 
@@ -44,6 +44,21 @@ logic       spaced_axis_tvalid;
 logic       spaced_axis_tlast;
 logic [7:0] spaced_axis_tdata;
 
+logic       udp_axis_tready;
+logic       udp_axis_tvalid;
+logic       udp_axis_tlast;
+logic [7:0] udp_axis_tdata;
+
+logic       ip_axis_tready;
+logic       ip_axis_tvalid;
+logic       ip_axis_tlast;
+logic [7:0] ip_axis_tdata;
+
+logic       eth_payload_axis_tready;
+logic       eth_payload_axis_tvalid;
+logic       eth_payload_axis_tlast;
+logic [7:0] eth_payload_axis_tdata;
+
 reset_gen
 	#(
 		.POLARITY(0), // Active low
@@ -54,16 +69,19 @@ reset_gen
 		.sreset(sresetn)
 	);
 /* verilator lint_off WIDTH */
+
+localparam integer PAYLOAD_BYTES = 32;
+
 vector_to_axis
 	#(
-		.VEC_BYTES(128),
+		.VEC_BYTES(PAYLOAD_BYTES),
 		.AXIS_BYTES(1),
 		.MSB_FIRST(1)
 	) sof_axis_gen (
 		.clk(clk),
 		.sresetn(sresetn),
 
-		.vec(128'hDEADBEEFCAFECAFEDEADBEEFCAFECAFE),
+		.vec(256'hDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFE),
 
 		.axis_tready(payload_axis_tready),
 		.axis_tvalid(payload_axis_tvalid),
@@ -71,6 +89,76 @@ vector_to_axis
 		.axis_tdata (payload_axis_tdata)
 	);
 /* verilator lint_on WIDTH */
+
+udp_header_gen udp_gen (
+	.clk(clk),
+	.sresetn(sresetn),
+
+	.src_port(100),
+	.dest_port(200),
+
+	.payload_length_axis_tready(),
+	.payload_length_axis_tvalid(1),
+	.payload_length_axis_tlast(1),
+	.payload_length_axis_tdata(PAYLOAD_BYTES[15:0]),
+
+	.axis_o_tready(udp_axis_tready),
+	.axis_o_tvalid(udp_axis_tvalid),
+	.axis_o_tlast (udp_axis_tlast),
+	.axis_o_tdata (udp_axis_tdata)
+	);
+
+localparam [15:0] IP_BYTES = PAYLOAD_BYTES[15:0]+8;
+
+ip_header_gen ip_gen (
+	.clk(clk),
+	.sresetn(sresetn),
+
+	.src_ip(32'hC0A80001), //192.168.0.1
+	.dest_ip(32'hC0A80002), //192.168.0.2
+	.protocol(17),
+
+	.payload_length_axis_tready(),
+	.payload_length_axis_tvalid(1),
+	.payload_length_axis_tlast(1),
+	.payload_length_axis_tdata(IP_BYTES),
+
+	.axis_o_tready(ip_axis_tready),
+	.axis_o_tvalid(ip_axis_tvalid),
+	.axis_o_tlast (ip_axis_tlast),
+	.axis_o_tdata (ip_axis_tdata)
+	);
+
+axis_joiner
+#(
+	.AXIS_BYTES(1),
+	.NUM_STREAMS(3)
+) input_joiner (
+	.clk(clk),
+	.sresetn(sresetn),
+
+	.axis_i_tready({ payload_axis_tready,
+	                     udp_axis_tready,
+	                      ip_axis_tready}),
+
+	 .axis_i_tvalid({ payload_axis_tvalid,
+	                      udp_axis_tvalid,
+	                       ip_axis_tvalid}),
+
+	.axis_i_tlast({ payload_axis_tlast,
+	                    udp_axis_tlast,
+	                     ip_axis_tlast}),
+
+	.axis_i_tdata({ payload_axis_tdata,
+	                    udp_axis_tdata,
+	                     ip_axis_tdata}),
+
+	.axis_o_tready(eth_payload_axis_tready),
+	.axis_o_tvalid(eth_payload_axis_tvalid),
+	.axis_o_tlast (eth_payload_axis_tlast),
+	.axis_o_tdata (eth_payload_axis_tdata)
+);
+
 eth_framer framer (
 		.clk(clk),
 		.sresetn(sresetn),
@@ -79,10 +167,10 @@ eth_framer framer (
 		.dst_mac(DST_MAC),
 		.ethertype(ETHERTYPE),
 
-		.payload_axis_tready(payload_axis_tready),
-		.payload_axis_tvalid(payload_axis_tvalid),
-		.payload_axis_tlast (payload_axis_tlast),
-		.payload_axis_tdata (payload_axis_tdata),
+		.payload_axis_tready(eth_payload_axis_tready),
+		.payload_axis_tvalid(eth_payload_axis_tvalid),
+		.payload_axis_tlast (eth_payload_axis_tlast),
+		.payload_axis_tdata (eth_payload_axis_tdata),
 
 		.out_axis_tready(framed_axis_tready),
 		.out_axis_tvalid(framed_axis_tvalid),
@@ -90,8 +178,7 @@ eth_framer framer (
 		.out_axis_tdata (framed_axis_tdata)
 	);
 
-//Replace with packet FIFO!!!!!
-axis_fifo
+axis_packet_fifo
 	#(
 		.AXIS_BYTES(1)
 	) fifo_inst (

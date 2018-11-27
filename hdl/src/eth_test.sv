@@ -18,9 +18,9 @@ module eth_test
 	input rx_er
 );
 
-	localparam SRC_MAC = 48'h000102030405;
+	localparam SRC_MAC = 48'h020000000001; // Locally set
 	localparam DST_MAC = 48'hFFFFFFFFFFFF; //Broadcast
-	localparam ETHERTYPE = 16'h0800; //Local experimental
+	localparam ETHERTYPE = 16'h0800; // IP
 
 logic sresetn;
 
@@ -70,7 +70,7 @@ reset_gen
 	);
 /* verilator lint_off WIDTH */
 
-localparam integer PAYLOAD_BYTES = 32;
+localparam integer PAYLOAD_BYTES = 1;
 
 vector_to_axis
 	#(
@@ -81,7 +81,8 @@ vector_to_axis
 		.clk(clk),
 		.sresetn(sresetn),
 
-		.vec(256'hDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFE),
+		.vec(50),
+//		.vec(256'hDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFE),
 
 		.axis_tready(payload_axis_tready),
 		.axis_tvalid(payload_axis_tvalid),

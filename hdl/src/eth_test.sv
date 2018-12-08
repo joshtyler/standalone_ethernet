@@ -72,17 +72,12 @@ reset_gen
 
 localparam integer PAYLOAD_BYTES = 1;
 
-vector_to_axis
+axis_counter
 	#(
-		.VEC_BYTES(PAYLOAD_BYTES),
-		.AXIS_BYTES(1),
-		.MSB_FIRST(1)
-	) sof_axis_gen (
+		.AXIS_BYTES(1)
+	) payload_gen (
 		.clk(clk),
 		.sresetn(sresetn),
-
-		.vec(50),
-//		.vec(256'hDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFEDEADBEEFCAFECAFE),
 
 		.axis_tready(payload_axis_tready),
 		.axis_tvalid(payload_axis_tvalid),
@@ -179,41 +174,41 @@ eth_framer framer (
 		.out_axis_tdata (framed_axis_tdata)
 	);
 
-axis_packet_fifo
-	#(
-		.AXIS_BYTES(1)
-	) fifo_inst (
-		.clk(clk),
-		.sresetn(sresetn),
-
-		.axis_i_tready(framed_axis_tready),
-		.axis_i_tvalid(framed_axis_tvalid),
-		.axis_i_tlast (framed_axis_tlast),
-		.axis_i_tdata (framed_axis_tdata),
-
-		.axis_o_tready(packet_axis_tready),
-		.axis_o_tvalid(packet_axis_tvalid),
-		.axis_o_tlast (packet_axis_tlast),
-		.axis_o_tdata (packet_axis_tdata)
-	);
-
 	axis_spacer
 		#(
 			.AXIS_BYTES(1),
-			.GAP_CYCLES(5000000)
+			.GAP_CYCLES(500) // Once per second
 		) spacer_inst (
 			.clk(clk),
 			.sresetn(sresetn),
 
-			.axis_i_tready(packet_axis_tready),
-			.axis_i_tvalid(packet_axis_tvalid),
-			.axis_i_tlast (packet_axis_tlast),
-			.axis_i_tdata (packet_axis_tdata),
+			.axis_i_tready(framed_axis_tready),
+			.axis_i_tvalid(framed_axis_tvalid),
+			.axis_i_tlast (framed_axis_tlast),
+			.axis_i_tdata (framed_axis_tdata),
 
 			.axis_o_tready(spaced_axis_tready),
 			.axis_o_tvalid(spaced_axis_tvalid),
 			.axis_o_tlast (spaced_axis_tlast),
 			.axis_o_tdata (spaced_axis_tdata)
+		);
+
+	axis_packet_fifo
+		#(
+			.AXIS_BYTES(1)
+		) fifo_inst (
+			.clk(clk),
+			.sresetn(sresetn),
+
+			.axis_i_tready(spaced_axis_tready),
+			.axis_i_tvalid(spaced_axis_tvalid),
+			.axis_i_tlast (spaced_axis_tlast),
+			.axis_i_tdata (spaced_axis_tdata),
+
+			.axis_o_tready(packet_axis_tready),
+			.axis_o_tvalid(packet_axis_tvalid),
+			.axis_o_tlast (packet_axis_tlast),
+			.axis_o_tdata (packet_axis_tdata)
 		);
 
 	rmii_to_axis rmii_inst (
@@ -226,10 +221,10 @@ axis_packet_fifo
 			.crs_dv(crs_dv),
 			.rx_er(rx_er),
 
-			.tx_axis_ready (spaced_axis_tready),
-			.tx_axis_tvalid(spaced_axis_tvalid),
-			.tx_axis_tlast (spaced_axis_tlast),
-			.tx_axis_tdata (spaced_axis_tdata),
+			.tx_axis_ready (packet_axis_tready),
+			.tx_axis_tvalid(packet_axis_tvalid),
+			.tx_axis_tlast (packet_axis_tlast),
+			.tx_axis_tdata (packet_axis_tdata),
 
 			.rx_axis_tvalid(),
 			.rx_axis_tlast (),

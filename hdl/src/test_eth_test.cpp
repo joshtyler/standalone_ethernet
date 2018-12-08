@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 		}
 
 		// Break on timeout
-		if(uut.getTime() == 100000)
+		if(uut.getTime() == 10000000)
 		{
 			std::cout << "Timed out" << std::endl;
 			break;
@@ -45,13 +45,15 @@ int main(int argc, char** argv)
 	std::vector<std::vector<uint8_t>> data = rmii.getData();
 	if(data.size() > 0)
 	{
-		std::cout << "First packet:" << std::hex;
+		std::cout << "First packet:" << std::hex << " (of " << std::dec << data.size() << ")" << std::endl;
 		for(auto const & itm : data[0])
 		{
 			std::cout << std::setfill('0') << std::setw(2) << (int)itm << " ";
 		}
 		std::cout << std::dec << std::endl;
-		// Send over socket
-		sock.send(data[0]);
 	}
+
+	// Send over socket
+	for(auto d : data)
+		sock.send(d);
 }

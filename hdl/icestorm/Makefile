@@ -20,11 +20,40 @@ PROJ = eth_test
 DEVICE = 8k
 PACKAGE = ct256
 
+COMMON_SYNTH_DIR = $(SRC_DIR)/hdl_common/synth
+
 # Input files
-SRC_FILES = $(SRC_DIR)/eth_test.sv $(SRC_DIR)/axis_fifo.sv $(SRC_DIR)/axis_joiner.sv $(SRC_DIR)/axis_register.sv $(SRC_DIR)/axis_spacer.sv $(SRC_DIR)/axis_unpacker.sv $(SRC_DIR)/crc.sv $(SRC_DIR)/eth_framer.sv $(SRC_DIR)/fifo.sv $(SRC_DIR)/reset_gen.sv $(SRC_DIR)/rmii_to_axis.sv $(SRC_DIR)/vector_to_axis.sv $(SRC_DIR)/axis_distributor.sv
+SRC_FILES = $(SRC_DIR)/eth_test.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_packet_fifo.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_joiner.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_register.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_spacer.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_width_converter.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/vector_to_axis.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_counter.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_round_robin.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_fifo.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_broadcaster.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_padder.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_gater.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/axis/axis_switch.sv
+
+SRC_FILES += $(COMMON_SYNTH_DIR)/network/eth_crc.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/network/eth_framer.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/network/rmii_to_axis.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/network/ip_header_gen.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/network/udp_checksum.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/network/udp_header_gen.sv
+
+SRC_FILES += $(COMMON_SYNTH_DIR)/other/fifo.sv
+SRC_FILES += $(COMMON_SYNTH_DIR)/other/reset_gen.sv
+
+
+
 
 PCF_FILE = $(SRC_DIR)/pins.pcf
 
+.PHONY: all
 all: $(PROJ).rpt $(PROJ).bin
 
 %.blif: $(SRC_FILES)
